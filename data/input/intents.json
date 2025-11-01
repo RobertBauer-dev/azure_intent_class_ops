@@ -1,0 +1,52 @@
+{
+  "login_problems": [
+    "Ich kann mich nicht einloggen",
+    "Passwort funktioniert nicht",
+    "Mein Account ist gesperrt"
+  ],
+  "payment_issues": [
+    "Meine Zahlung wird abgelehnt",
+    "Ich kann keine Kreditkarte hinzufügen",
+    "Ich wurde doppelt abgebucht"
+  ],
+  "account_changes": [
+    "Wie ändere ich meine E-Mail?",
+    "Ich möchte meine Telefonnummer aktualisieren",
+    "Wie kann ich meine Adresse ändern?"
+  ],
+  "technical_error": [
+    "Die App stürzt ständig ab",
+    "Ich bekomme Error 500",
+    "Nichts lädt mehr"
+  ],
+  "subscription": [
+    "Wie kündige ich mein Abo?",
+    "Upgrade auf Premium funktioniert nicht",
+    "Wo finde ich meine Rechnungen?"
+  ],
+  "delivery": [
+    "Meine Bestellung ist nicht angekommen",
+    "Wo ist mein Paket?",
+    "Die Lieferung ist verspätet"
+  ],
+  "returns": [
+    "Ich möchte einen Artikel zurückschicken",
+    "Wie mache ich eine Retoure?",
+    "Wann bekomme ich mein Geld zurück?"
+  ],
+  "product_info": [
+    "Ist Produkt X wasserfest?",
+    "Wie groß ist das Modell Y?",
+    "Hat das Produkt eine Garantie?"
+  ],
+  "security": [
+    "Ich glaube mein Konto wurde gehackt",
+    "Unbekannte Geräte in meinem Login",
+    "Wurde mein Passwort geleakt?"
+  ],
+  "general_question": [
+    "Wie erreiche ich den Support?",
+    "Welche Öffnungszeiten habt ihr?",
+    "Wann ist der Kundendienst erreichbar?"
+  ]
+}

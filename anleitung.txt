@@ -1,0 +1,55 @@
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash   # (Linux)
+az login
+az account set --subscription "DEINE_SUBSCRIPTION_ID"
+
+
+python -m venv .venv
+source .venv/bin/activate
+pip install azureml-core openai azure-identity pandas scikit-learn fastapi uvicorn
+
+
+
+# Ressourcengruppe
+az group create -n rg-llmops-demo -l westeurope
+
+->
+{
+  "id": "/subscriptions/8659e0d0-fc48-4f86-937b-73e4cc5ea05b/resourceGroups/rg-llmops-demo",
+  "location": "westeurope",
+  "managedBy": null,
+  "name": "rg-llmops-demo",
+  "properties": {
+    "provisioningState": "Succeeded"
+  },
+  "tags": null,
+  "type": "Microsoft.Resources/resourceGroups"
+}
+
+
+
+# Storage Account
+az storage account create -n llmopsstorage$RANDOM -g rg-llmops-demo -l westeurope --sku Standard_LRS
+-> musste manuelle im Portal unter Storage Accounts angelegt werden
+
+# Key Vault
+az keyvault create -n kv-llmops-demo -g rg-llmops-demo -l westeurope
+-> musste ich auch manuell im Portal unter "Key Vaults" erstellt werden
+
+# Azure Machine Learning Workspace
+az ml workspace create -w mlw-llmops-demo -g rg-llmops-demo -l westeurope
+-> Portal -> Azure MAchine Learning. dort die vorher gewählen Storage Acc und Key Vaults nehmen
+
+# Azure Cognitive Search (für Vector)
+az search service create --name llmops-search-$RANDOM --resource-group rg-llmops-demo --sku basic --location westeurope
+-> jetzt AI Foundry > AI Search. Kostet aber 250 Doller / Monat -> wir machen das doch nicht, sondern Azure OpenAi direkt nutzen
+
+
+az cognitiveservices account create \
+  -n aoai-llmops-demo \
+  -g rg-llmops-demo \
+  -l westeurope \
+  --kind OpenAI \
+  --sku S0
+-> gibt es nicht. Sind bei Subscription -> Resources -> Create Azure AI services gegangen.
+
+az keyvault secret set --vault-name kv-llmops-demo --name openai-key --value "DEIN_API_KEY"
