@@ -6,3 +6,7 @@ scikit-learn
 fastapi
 uvicorn
 pandas
+
+azure-ai-ml
+mlflow
+joblib

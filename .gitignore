@@ -17,3 +17,8 @@ labels.json
 
 # Index files
 *.index
+
+mlruns/
+
+artifacts/
+artifacts_on_prem/
