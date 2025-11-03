@@ -1,38 +1,25 @@
+import sys
+from pathlib import Path
+
+# Set up project path before importing config
+_project_root = Path(__file__).parent.parent.resolve()
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 import faiss
-import numpy as np
 import json
-from openai import AzureOpenAI
-import os
 from dotenv import load_dotenv
+
+import config
+from model.embedding_model import embed_query
 
 load_dotenv()
 
-# To logs?
-print(os.getenv("AZURE_OPENAI_APIVERSION"))
-print(os.getenv("EMB_MODEL_DEPLOY_TARGET_URI"))
-print(os.getenv("EMB_MODEL"))
-print(os.getenv("EMB_DIM"))
-
-
-client = AzureOpenAI(
-    api_version=os.getenv("AZURE_OPENAI_APIVERSION"),
-    azure_endpoint=os.getenv("EMB_MODEL_DEPLOY_TARGET_URI"),
-    api_key=os.getenv("EMB_MODEL_DEPLOY_KEY")
-)
-
-def embed_query(q):
-    r = client.embeddings.create(
-        model=os.getenv("EMB_MODEL"),
-        input=q,
-        dimensions=int(os.getenv("EMB_DIM"))
-    )
-    return np.array(r.data[0].embedding, dtype="float32").reshape(1, -1)
-
 # Lade FAISS Index
-index = faiss.read_index("data/vector_db/faiss.index")
+index = faiss.read_index(str(config.PROJECT_ROOT / "data/vector_db/faiss.index"))
 
 # Labels
-with open("data/embeddings/labels.json") as f:
+with open(config.PROJECT_ROOT / "data/embeddings/labels.json") as f:
     labels = json.load(f)
 
 if __name__ == "__main__":

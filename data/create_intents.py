@@ -51,6 +51,16 @@ INTENTS = {
     ]
 }
 
+import sys
+from pathlib import Path
+
+# Set up project path before importing config
+_project_root = Path(__file__).parent.parent.resolve()
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 import json
-with open("data/input/intents.json", "w") as f:
+import config
+
+with open(config.PROJECT_ROOT / "data/input/intents.json", "w") as f:
     json.dump(INTENTS, f, indent=2, ensure_ascii=False)

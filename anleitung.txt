@@ -53,3 +53,32 @@ az cognitiveservices account create \
 -> gibt es nicht. Sind bei Subscription -> Resources -> Create Azure AI services gegangen.
 
 az keyvault secret set --vault-name kv-llmops-demo --name openai-key --value "DEIN_API_KEY"
+
+
+Einen Compute-Cluster anlegen:
+az ml compute create \
+  -g rg-llmops-demo \
+  -w mlw-llmops-demo \
+  -n cpu-cluster \
+  --size Standard_DS2_v2 \
+  --min-instances 0 \
+  --max-instances 2
+
+-> Preview version of extension is disabled by default for extension installation, enabled for modules without stable versions. 
+Please run 'az config set extension.dynamic_install_allow_preview=true or false' to config it specifically. 
+The command requires the extension ml. Do you want to install it now? The command will continue to run after the extension is installed. (Y/n): Y
+Run 'az config set extension.use_dynamic_install=yes_without_prompt' to allow installing extensions without prompt.
+Unknown compute type: None
+
+-> im Portal:
+	1.	Gehe ins Portal → Suche: “Machine Learning”
+	2.	Öffne deinen Workspace: mlw-llmops-demo
+	3.	Links im Menü: Compute
+	4.	Registerkarte Compute clusters
+	5.	Klick auf + New
+Compute Types:
+Standard_DS11_v2 und Standard_DS3_v2
+
+  az ml job create --file model/job.yml \
+  -g rg-llmops-demo \
+  -w mlw-llmops-demo

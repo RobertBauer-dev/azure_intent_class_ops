@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Set up project path before importing config
+_project_root = Path(__file__).parent.parent.resolve()
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 import numpy as np
 import json
 import joblib
@@ -7,12 +15,14 @@ from sklearn.model_selection import train_test_split
 import mlflow
 import mlflow.sklearn
 
+import config
+
 # Logging starten
 mlflow.set_experiment("intent_classification")
 
 # Daten laden
-embeddings = np.load("data/embeddings/embeddings.npy")
-with open("data/embeddings/labels.json") as f:
+embeddings = np.load(config.PROJECT_ROOT / "data/embeddings/embeddings.npy")
+with open(config.PROJECT_ROOT / "data/embeddings/labels.json") as f:
     labels = json.load(f)
 
 # Labels encoden
@@ -49,8 +59,8 @@ with mlflow.start_run():
     print(f"✅ Test Accuracy: {acc:.3f}")
 
     # Speichern
-    joblib.dump(clf, "model/artifacts/model.pkl")
-    joblib.dump(le, "model/artifacts/label_encoder.pkl")
+    joblib.dump(clf, config.PROJECT_ROOT / "model/artifacts/model.pkl")
+    joblib.dump(le, config.PROJECT_ROOT / "model/artifacts/label_encoder.pkl")
 
     mlflow.sklearn.log_model(clf, name="sklearn-model")
 

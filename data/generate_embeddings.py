@@ -1,32 +1,23 @@
 import os
+import sys
 import json
 import numpy as np
+from pathlib import Path
 from openai import AzureOpenAI
 from dotenv import load_dotenv
 
+# Set up project path before importing config
+_project_root = Path(__file__).parent.parent.resolve()
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
+import config
+from model.embedding_model import embed_texts
+
 load_dotenv()
 
-# To logs?
-print(os.getenv("AZURE_OPENAI_APIVERSION"))
-print(os.getenv("EMB_MODEL_DEPLOY_TARGET_URI"))
-print(os.getenv("EMB_MODEL"))
-print(os.getenv("EMB_DIM"))
-
-# Hole API-Key aus ENV
-client = AzureOpenAI(
-    api_version=os.getenv("AZURE_OPENAI_APIVERSION"),
-    azure_endpoint=os.getenv("EMB_MODEL_DEPLOY_TARGET_URI"),
-    api_key=os.getenv("EMB_MODEL_DEPLOY_KEY")
-)
-
-# Zeige verfügbare Deployments
-"""print("\nVerfügbare Deployments:")
-deployments = client.models.list()
-for model in deployments:
-    print(f"  - {model.id}")"""
-
 # Lade Dataset
-with open("data/input/intents.json") as f:
+with open(config.PROJECT_ROOT / "data/input/intents.json") as f:
     INTENTS = json.load(f)
 
 all_texts = []
@@ -37,21 +28,13 @@ for label, texts in INTENTS.items():
         all_texts.append(t)
         all_labels.append(label)
 
-# Embeddings holen
-def embed_texts(texts):
-    response = client.embeddings.create(
-        model=os.getenv("EMB_MODEL"),
-        input=texts,
-        dimensions=int(os.getenv("EMB_DIM"))
-    )
-    return [d.embedding for d in response.data]
 
 embeddings = embed_texts(all_texts)
 
 # Speicher Embeddings & Labels
-np.save("data/embeddings/embeddings.npy", np.array(embeddings))
+np.save(config.PROJECT_ROOT / "data/embeddings/embeddings.npy", np.array(embeddings))
 
-with open("data/embeddings/labels.json", "w") as f:
+with open(config.PROJECT_ROOT / "data/embeddings/labels.json", "w") as f:
     json.dump(all_labels, f, indent=2)
 
 print("✅ Embeddings gespeichert")

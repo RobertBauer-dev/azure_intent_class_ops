@@ -1,0 +1,7 @@
+experiment_name: intent_classification
+code: .
+command: >
+  python  model/train_classifier.py
+environment:
+  image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:latest
+compute: azureml:cpu-cluster
