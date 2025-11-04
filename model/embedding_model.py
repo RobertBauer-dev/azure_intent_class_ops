@@ -2,14 +2,32 @@ from openai import AzureOpenAI
 import os
 from dotenv import load_dotenv
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
+logger.info("Environment loaded")
+
+azure_endpoint=os.getenv("EMB_ENDPOINT_BASE")   #("EMB_MODEL_DEPLOY_TARGET_URI")
+azure_deployment=os.getenv("EMB_MODEL_DEPLOY_NAME")
+api_version=os.getenv("AZURE_OPENAI_APIVERSION")
+
+logger.info(f"Azure endpoint: {azure_endpoint}")
+logger.info(f"Azure deployment: {azure_deployment}")
+logger.info(f"API version: {api_version}")
 
 embed_client = AzureOpenAI(
-    api_version=os.getenv("AZURE_OPENAI_APIVERSION"),
-    azure_endpoint=os.getenv("EMB_MODEL_DEPLOY_TARGET_URI"),
+    azure_endpoint=azure_endpoint,
+    azure_deployment=azure_deployment,
+    api_version=api_version,
     api_key=os.getenv("EMB_MODEL_DEPLOY_KEY")
 )
+
+if not embed_client.api_key:
+    raise ValueError("EMB_MODEL_DEPLOY_KEY environment variable is not set")
+
+logger.info("Embedding client created")
 
 def embed_query(q):
     r = embed_client.embeddings.create(

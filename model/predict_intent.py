@@ -12,33 +12,50 @@ if str(_project_root) not in sys.path:
 
 import config
 from model.embedding_model import embed_query
-from model.chat_model import chat_client
-from model.fallback_promt import INTENT_DESCRIPTIONS, build_fallback_prompt
+from model.chat_model import llm_fallback
 
 
 load_dotenv()
 
-# Laden - use absolute paths relative to project root
-clf = joblib.load(config.PROJECT_ROOT / "model/artifacts/model.pkl")
-le = joblib.load(config.PROJECT_ROOT / "model/artifacts/label_encoder.pkl")
-index = faiss.read_index(str(config.PROJECT_ROOT / "data/vector_db/faiss.index"))
+# Globale Variablen für Lazy Loading
+clf = None
+le = None
+index = None
 
+def _load_models():
+    """Lade Modelle beim ersten Aufruf (Lazy Loading)"""
+    global clf, le, index
+    if clf is None or le is None or index is None:
+        try:
+            print(f"Loading models from: {config.PROJECT_ROOT}")
+            print(f"Checking if files exist...")
+            print(f"model.pkl exists: {(config.PROJECT_ROOT / 'model/artifacts/model.pkl').exists()}")
+            print(f"label_encoder.pkl exists: {(config.PROJECT_ROOT / 'model/artifacts/label_encoder.pkl').exists()}")
+            print(f"faiss.index exists: {(config.PROJECT_ROOT / 'data/vector_db/faiss.index').exists()}")
+            
+            clf = joblib.load(config.PROJECT_ROOT / "model/artifacts/model.pkl")
+            print("✓ model.pkl loaded")
+            
+            le = joblib.load(config.PROJECT_ROOT / "model/artifacts/label_encoder.pkl")
+            print("✓ label_encoder.pkl loaded")
+            
+            index = faiss.read_index(str(config.PROJECT_ROOT / "data/vector_db/faiss.index"))
+            print("✓ faiss.index loaded")
+        except Exception as e:
+            print(f"ERROR loading models: {e}")
+            print(f"Error type: {type(e).__name__}")
+            import traceback
+            traceback.print_exc()
+            raise
 
 # Thresholds
-CLF_THRESHOLD = float(os.getenv("CLF_THRESHOLD"))
-RETRIEVAL_THRESHOLD = float(os.getenv("RETRIEVAL_THRESHOLD")) # abhängig von embedding-Dimension & Distanz-Metrik
-
-
-def llm_fallback(text):
-    prompt = INTENT_DESCRIPTIONS + "\n" + build_fallback_prompt(text)
-    r = chat_client.chat.completions.create(
-        model=os.getenv("CHAT_MODEL"),
-        messages=[{"role": "system", "content": prompt}]
-    )
-    return r.choices[0].message.content.strip()
+CLF_THRESHOLD = float(os.getenv("CLF_THRESHOLD", 0.60))
+RETRIEVAL_THRESHOLD = float(os.getenv("RETRIEVAL_THRESHOLD", 1.2)) # abhängig von embedding-Dimension & Distanz-Metrik
 
 
 def predict_intent(text):
+    # Lade Modelle beim ersten Aufruf (Lazy Loading)
+    _load_models()
 
     emb = embed_query(text)
 

@@ -23,3 +23,25 @@ docker run -p 8001:8001 --env-file .env llmops-api
 
 # use adress in chrome instead safari
 http://0.0.0.0:8001/docs
+
+## Docker deploy on Azure
+# if not already built
+docker build -t llmops-api .
+# this can not made in Azure portal only via terminal
+# 1. login
+az login
+# 2. ACR login (Azure Container Registry)
+az acr login -n acrllmopsdemo2 
+# 3. tag image
+docker tag llmops-api acrllmopsdemo2.azurecr.io/llmops-api:v1
+# 4. push into ACR
+docker push acrllmopsdemo2.azurecr.io/llmops-api:v1
+# 5. admin account aktivieren
+az acr update -n acrllmopsdemo2 --admin-enabled true
+# 6. Deployment in Azure Container Instances
+bash deploy-aci.sh
+
+# example usage
+curl -X POST "http://<deine-azure-ip>:8000/predict" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "Meine Bezahlung schlägt fehl"}'
