@@ -1,21 +1,20 @@
-AZURE_OPENAI_APIVERSION=2025-01-01-preview
-AZURE_OPENAI_ENDPOINT=https://oai-llmops-demo.openai.azure.com/
-AZURE_OPENAI_KEY1=<AZURE_OPENAI_KEY1>
+AZURE_OPENAI_APIVERSION=2025-01-01-preview #"2024-02-15-preview"
 
-CHAT_ENDPOINT_URI=https://drro-mhezwhst-eastus2.cognitiveservices.azure.com/openai/deployments/o4-mini/chat/completions?api-version=2025-01-01-preview
-CHAT_ENDPOINT_KEY=<CHAT_ENDPOINT_KEY>
+EMB_ENDPOINT_BASE=https://<your-resource-name>.cognitiveservices.azure.com/
+EMB_MODEL_DEPLOY_NAME=text-embedding-3-small
+EMB_MODEL_DEPLOY_KEY=<EMB_MODEL_DEPLOY_KEY>
 
 EMB_MODEL=text-embedding-3-small
 EMB_DIM=512
 
-EMB_MODEL_DEPLOY_NAME=text-embedding-3-small
-EMB_MODEL_DEPLOY_TARGET_URI=https://drro-mhezwhst-eastus2.cognitiveservices.azure.com/openai/deployments/text-embedding-3-small/embeddings?api-version=2023-05-15
-EMB_MODEL_DEPLOY_KEY=3<EMB_MODEL_DEPLOY_KEY>
-
-
-OPENAI_KEY=<OPENAI_KEY>
 
 CLF_THRESHOLD=0.60
 RETRIEVAL_THRESHOLD=1.2
 
+CHAT_ENDPOINT_URI=https://<your-resource-name>.cognitiveservices.azure.com/openai/deployments/<your-deployment-name>/chat/completions?api-version=2025-01-01-preview
+CHAT_ENDPOINT_KEY=<CHAT_ENDPOINT_KEY>
+
 CHAT_MODEL=o4-mini
+
+
+APP_INSIGHTS_CONN_STR="InstrumentationKey=<your-instrumentation-key>;IngestionEndpoint=https://<your-region>.in.applicationinsights.azure.com/;LiveEndpoint=https://<your-region>.livediagnostics.monitor.azure.com/;ApplicationId=<your-application-id>"

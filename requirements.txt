@@ -10,3 +10,13 @@ pandas
 azure-ai-ml
 mlflow
 joblib
+
+# Testing
+pytest
+httpx  # Für FastAPI TestClient
+pytest-mock  # Für besseres Mocking
+
+# Azure Application Insights
+opentelemetry-distro
+azure-monitor-opentelemetry-exporter
+opentelemetry-instrumentation-fastapi
