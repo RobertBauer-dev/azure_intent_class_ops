@@ -24,5 +24,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
+      - name: Set up test environment variables
+        run: |
+          # Set dummy environment variables for Azure OpenAI clients
+          # These are needed for module imports, but tests will mock the actual API calls
+          echo "AZURE_OPENAI_APIVERSION=2025-01-01-preview" >> $GITHUB_ENV
+          echo "EMB_ENDPOINT_BASE=https://dummy.cognitiveservices.azure.com/" >> $GITHUB_ENV
+          echo "EMB_MODEL_DEPLOY_NAME=text-embedding-3-small" >> $GITHUB_ENV
+          echo "EMB_MODEL_DEPLOY_KEY=dummy-key" >> $GITHUB_ENV
+          echo "EMB_MODEL=text-embedding-3-small" >> $GITHUB_ENV
+          echo "EMB_DIM=512" >> $GITHUB_ENV
+          echo "CHAT_ENDPOINT_URI=https://dummy.cognitiveservices.azure.com/openai/deployments/dummy/chat/completions?api-version=2025-01-01-preview" >> $GITHUB_ENV
+          echo "CHAT_ENDPOINT_KEY=dummy-key" >> $GITHUB_ENV
+          echo "CHAT_MODEL=o4-mini" >> $GITHUB_ENV
+          echo "CLF_THRESHOLD=0.60" >> $GITHUB_ENV
+          echo "RETRIEVAL_THRESHOLD=1.2" >> $GITHUB_ENV
+      
       - name: Run tests
         run: pytest -v --tb=short
