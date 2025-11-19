@@ -28,6 +28,19 @@ with open(config.PROJECT_ROOT / "data/embeddings/labels.json") as f:
 # Labels encoden
 le = LabelEncoder()
 y = le.fit_transform(labels)
+"""
+# Example-mapping (alphabetically sorted):
+"account_changes"     → 0
+"delivery"            → 1
+"general_question"    → 2
+"login_problems"      → 3
+"payment_issues"      → 4
+"product_info"        → 5
+"returns"             → 6
+"security"            → 7
+"subscription"        → 8
+"technical_error"     → 9
+"""
 
 X_train, X_test, y_train, y_test = train_test_split(
     embeddings, y, test_size=0.2, random_state=42
@@ -37,7 +50,7 @@ with mlflow.start_run():
     
     # Hyperparameters
     C = 1.0
-    penalty = "l2"
+    penalty = "l2" # Ridge Regression
     
     mlflow.log_param("C", C)
     mlflow.log_param("penalty", penalty)
@@ -48,7 +61,7 @@ with mlflow.start_run():
         C=C,
         penalty=penalty,
         max_iter=2000,
-        solver="liblinear"
+        solver="liblinear" # liblinear is a good choice for small datasets (saga=better for large datasets)
     )
     clf.fit(X_train, y_train)
 

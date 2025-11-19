@@ -18,9 +18,9 @@ from model.chat_model import llm_fallback
 load_dotenv()
 
 # Globale Variablen für Lazy Loading
-clf = None
-le = None
-index = None
+clf = None # classifier
+le = None # label encoder
+index = None # FAISS index
 
 def _load_models():
     """Lade Modelle beim ersten Aufruf (Lazy Loading)"""
@@ -48,26 +48,25 @@ def _load_models():
             traceback.print_exc()
             raise
 
-# Thresholds
+# Thresholds (confidence thresholds for classifier and retrieval)
 CLF_THRESHOLD = float(os.getenv("CLF_THRESHOLD", 0.60))
-RETRIEVAL_THRESHOLD = float(os.getenv("RETRIEVAL_THRESHOLD", 1.2)) # abhängig von embedding-Dimension & Distanz-Metrik
+RETRIEVAL_THRESHOLD = float(os.getenv("RETRIEVAL_THRESHOLD", 1.2)) # dependent on embedding dimension & distance metric
 
 
-def predict_intent(text):
-    # Lade Modelle beim ersten Aufruf (Lazy Loading)
+def predict_intent(text) -> dict:
+    # Load models on first call (Lazy Loading)
     _load_models()
 
     emb = embed_query(text)
 
-    # Klassischer ML-Pred
-    class_pred = clf.predict(emb)[0]
+    # Classical ML-Prediction
+    class_pred = clf.predict(emb)[0] # integer
+    clf_intent = le.inverse_transform([class_pred])[0] # string
+    # Confidence of the classifier prediction
     class_conf = max(clf.predict_proba(emb)[0])
 
-    clf_intent = le.inverse_transform([class_pred])[0]
-
     # Retrieval
-    D, I = index.search(emb.astype("float32"), 1)
-    retrieval_intent = le.inverse_transform([clf.predict(emb)[0]])[0]
+    D, _ = index.search(emb.astype("float32"), 1) # D: distance, _: index
     retrieval_distance = float(D[0][0])
 
     # Decision Logic
@@ -83,7 +82,7 @@ def predict_intent(text):
         "intent": final_intent,
         "clf_intent": clf_intent,
         "clf_confidence": float(class_conf),
-        "retrieval_intent": retrieval_intent,
+        "retrieval_intent": clf_intent,
         "retrieval_distance": retrieval_distance,
         "fallback_used": fallback_used
     }
@@ -91,4 +90,11 @@ def predict_intent(text):
 if __name__ == "__main__":
     #test = "Ich wurde doppelt abgebucht"
     test = "Mein Passwort funktioniert nicht und ich kann mich nicht einloggen."
-    print(predict_intent(test))
+    result = predict_intent(test)
+    print(result)
+    print(f"Intent: {result['intent']}")
+    print(f"CLF Intent: {result['clf_intent']}")
+    print(f"CLF Confidence: {result['clf_confidence']}")
+    print(f"Retrieval Intent: {result['retrieval_intent']}")
+    print(f"Retrieval Distance: {result['retrieval_distance']}")
+    print(f"Fallback Used: {result['fallback_used']}")
