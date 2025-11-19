@@ -1,18 +1,72 @@
-# LLM-Ops Demo Projekt (Azure OpenAI + Lokale Vektorsuche)
+# LLM-Ops Demo Project (Azure OpenAI + Local Vector Search)
+
+## Executive Summary
+
+This project demonstrates a production-ready **Intent Classification System** that combines classical machine learning with modern LLM capabilities for efficient and cost-effective customer support automation.
+
+### What It Does
+
+The system automatically classifies customer inquiries into predefined intent categories (e.g., login problems, payment issues, account changes) using a hybrid approach:
+- **Fast ML-based classification** for high-confidence predictions
+- **LLM fallback** for ambiguous cases requiring deeper understanding
+- **Semantic search** via FAISS vector store for retrieval-augmented classification
+
+### Goals
+
+1. **Cost Efficiency**: Use lightweight ML models for the majority of requests, only invoking expensive LLM APIs when necessary
+2. **Production Readiness**: Demonstrate MLOps best practices including model versioning (MLflow), CI/CD pipelines, containerized deployment, and monitoring
+3. **Scalability**: Deploy on Azure Container Instances with horizontal scaling capabilities
+4. **Accuracy**: Achieve high classification accuracy through hybrid ML + LLM approach with confidence-based routing
+
+### Use Cases
+
+- **Customer Support Automation**: Route customer inquiries to appropriate support teams or automated responses
+- **Ticket Classification**: Automatically categorize support tickets, emails, or chat messages
+- **Intent-Based Routing**: Direct user queries to specialized handlers based on detected intent
+- **Analytics**: Track common customer issues and trends through classified intent data
+
+### Key Features
+
+- 🎯 **10 Intent Categories**: Login problems, payment issues, account changes, technical errors, subscriptions, delivery, returns, product info, security, and general questions
+- 🚀 **Hybrid Architecture**: Fast ML classifier (Logistic Regression) with LLM fallback (GPT-4o-mini) for edge cases
+- 📊 **MLflow Integration**: Model versioning, experiment tracking, and artifact management
+- 🔍 **FAISS Vector Search**: Local semantic search for retrieval-augmented classification
+- 🐳 **Containerized Deployment**: Docker-based deployment on Azure Container Instances
+- 📈 **Monitoring**: Azure Application Insights integration for production observability
+- ✅ **CI/CD Pipeline**: Automated testing and deployment via GitHub Actions
+
+---
 
 ## Architecture
 
 ```mermaid
 flowchart TD
 
-%% Sources & Ingestion
-A[Web Crawler<br/>Kafka Stream<br/>API Calls] --> B[Text Ingestion Layer]
+%% ===========================
+%% Training/Setup Phase (one-time)
+%% ===========================
+subgraph Training["Training/Setup Phase - One-time"]
+    direction TB
+    T1[create_intents.py<br/>Create Intent Data] --> T2[generate_embeddings.py<br/>Azure OpenAI Embeddings]
+    T2 --> T3[build_faiss.py<br/>Create FAISS Index]
+    T2 --> T4[train_classifier.py<br/>Train ML Model<br/>MLflow Tracking]
+    T3 --> T5[FAISS Index<br/>faiss.index]
+    T4 --> T6[ML Model<br/>model.pkl<br/>label_encoder.pkl]
+end
 
-%% Embeddings + Index
+%% ===========================
+%% Optional: Automated Data Sources
+%% ===========================
+subgraph Optional["Optional - Not Yet Implemented"]
+    A[Web Crawler<br/>Kafka Stream<br/>Automated Sources]
+end
+
+%% ===========================
+%% Inference Flow (per request)
+%% ===========================
+A -.->|Optional| B[FastAPI /predict Endpoint<br/>Text Input]
 B --> C[Embeddings Service<br/>Azure OpenAI / LLM]
 C --> D[FAISS Vector Store<br/>Semantic Index]
-
-%% ML Model
 D --> E[ML Classifier<br/>Logistic Regression]
 
 %% Decision Layer
@@ -21,18 +75,22 @@ E -->|Low Confidence| F[LLM Fallback<br/>GPT-4o-mini]
 F --> G
 
 %% Serving Layer
-G --> H[FastAPI Inference Service<br/>Docker Container<br/>local / ACI / Cloud Run]
+G --> H[FastAPI Response<br/>Docker Container<br/>local / ACI / Cloud Run]
 
 %% Monitoring
 H --> I[Monitoring & Logging<br/>Azure Application Insights]
 
 %% CI Pipeline
-subgraph CI[CI Pipeline - GitHub Actions]
+subgraph CI["CI Pipeline - GitHub Actions"]
     J[Unit Tests<br/>Integration Tests]
 end
 
 %% Manual Deployment
-J -.->|Manual deploy-aci.sh| H
+J -.->|Manual deploy-aci.sh| B
+
+%% Training Outputs to Inference Inputs
+T5 -.->|Loaded at startup| D
+T6 -.->|Loaded at startup| E
 ```
 
 ## Setup
@@ -75,13 +133,13 @@ http://0.0.0.0:8001/docs
 
 ## Docker deploy on Azure
 
-**WICHTIG:** Stelle sicher, dass diese Dateien lokal vorhanden sind (werden ins Docker Image kopiert):
+**IMPORTANT:** Make sure these files are locally available (will be copied into Docker image):
 - `model/artifacts/model.pkl`
 - `model/artifacts/label_encoder.pkl`
 - `data/vector_db/faiss.index`
 
 ```bash
-# 1. Docker Image bauen (prüft automatisch ob alle benötigten Dateien vorhanden sind)
+# 1. Build Docker image (automatically checks if all required files are present)
 docker build -t llmops-api .
 
 # 2. Azure Login
@@ -90,26 +148,26 @@ az login
 # 3. ACR Login (Azure Container Registry)
 az acr login -n acrllmopsdemo2 
 
-# 4. Admin Account aktivieren (nur beim ersten Mal oder wenn disabled)
+# 4. Enable admin account (only first time or if disabled)
 az acr update -n acrllmopsdemo2 --admin-enabled true
 
-# 5. Image taggen
+# 5. Tag image
 docker tag llmops-api acrllmopsdemo2.azurecr.io/llmops-api:v1
 
-# 6. Image in ACR pushen
+# 6. Push image to ACR
 docker push acrllmopsdemo2.azurecr.io/llmops-api:v1
 
-# 7. Deployment in Azure Container Instances
-# (stellt sicher, dass .env Datei vorhanden ist und alle ENV-Variablen enthält)
+# 7. Deploy to Azure Container Instances
+# (ensures .env file exists and contains all ENV variables)
 bash deploy-aci.sh
 ```
 
-**Hinweis:** Das `deploy-aci.sh` Script gibt nach erfolgreichem Deployment automatisch die Container-URLs aus (FQDN und IP).
+**Note:** The `deploy-aci.sh` script automatically outputs container URLs (FQDN and IP) after successful deployment.
 
 
 ```bash
-# 8. example usage
-curl -X POST "http://<deine-azure-ip>:8001/predict" \
+# 8. Example usage
+curl -X POST "http://<your-azure-ip>:8001/predict" \
      -H "Content-Type: application/json" \
      -d '{"text": "Meine Bezahlung schlägt fehl"}'
 ```
@@ -134,7 +192,7 @@ portal -> Application Insights -> ins-llmops-demo
 
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash   # (Linux)
 az login
-az account set --subscription "DEINE_SUBSCRIPTION_ID"
+az account set --subscription "YOUR_SUBSCRIPTION_ID"
 
 
 python -m venv .venv
@@ -143,7 +201,7 @@ pip install requirements.txt
 
 
 
-# Ressourcengruppe
+# Resource Group
 az group create -n rg-llmops-demo -l westeurope
 
 ->
@@ -163,19 +221,19 @@ az group create -n rg-llmops-demo -l westeurope
 
 # Storage Account
 az storage account create -n llmopsstorage$RANDOM -g rg-llmops-demo -l westeurope --sku Standard_LRS
--> musste manuelle im Portal unter Storage Accounts angelegt werden
+-> had to be created manually in the portal under Storage Accounts
 
 # Key Vault
 az keyvault create -n kv-llmops-demo -g rg-llmops-demo -l westeurope
--> musste ich auch manuell im Portal unter "Key Vaults" erstellt werden
+-> also had to be created manually in the portal under "Key Vaults"
 
 # Azure Machine Learning Workspace
 az ml workspace create -w mlw-llmops-demo -g rg-llmops-demo -l westeurope
--> Portal -> Azure MAchine Learning. dort die vorher gewählen Storage Acc und Key Vaults nehmen
+-> Portal -> Azure Machine Learning. Use the previously selected Storage Account and Key Vaults there
 
-# Azure Cognitive Search (für Vector)
+# Azure Cognitive Search (for Vector)
 az search service create --name llmops-search-$RANDOM --resource-group rg-llmops-demo --sku basic --location westeurope
--> jetzt AI Foundry > AI Search. Kostet aber 250 Doller / Monat -> wir machen das doch nicht, sondern Azure OpenAi direkt nutzen
+-> now AI Foundry > AI Search. Costs 250 dollars/month -> we don't do that, instead use Azure OpenAI directly
 
 
 az cognitiveservices account create \
@@ -184,12 +242,12 @@ az cognitiveservices account create \
   -l westeurope \
   --kind OpenAI \
   --sku S0
--> gibt es nicht. Sind bei Subscription -> Resources -> Create Azure AI services gegangen.
+-> doesn't exist. Went to Subscription -> Resources -> Create Azure AI services.
 
-az keyvault secret set --vault-name kv-llmops-demo --name openai-key --value "DEIN_API_KEY"
+az keyvault secret set --vault-name kv-llmops-demo --name openai-key --value "YOUR_API_KEY"
 
 
-Einen Compute-Cluster anlegen:
+# Create a compute cluster:
 az ml compute create \
   -g rg-llmops-demo \
   -w mlw-llmops-demo \
@@ -204,14 +262,14 @@ The command requires the extension ml. Do you want to install it now? The comman
 Run 'az config set extension.use_dynamic_install=yes_without_prompt' to allow installing extensions without prompt.
 Unknown compute type: None
 
--> im Portal:
-	1.	Gehe ins Portal → Suche: “Machine Learning”
-	2.	Öffne deinen Workspace: mlw-llmops-demo
-	3.	Links im Menü: Compute
-	4.	Registerkarte Compute clusters
-	5.	Klick auf + New
+-> in the portal:
+	1.	Go to Portal → Search: "Machine Learning"
+	2.	Open your workspace: mlw-llmops-demo
+	3.	In the left menu: Compute
+	4.	Compute clusters tab
+	5.	Click on + New
 Compute Types:
-Standard_DS11_v2 und Standard_DS3_v2
+Standard_DS11_v2 and Standard_DS3_v2
 
   az ml job create --file model/job.yml \
   -g rg-llmops-demo \
