@@ -49,7 +49,7 @@ echo "Erstelle neuen Container..."
 az container create \
   --resource-group rg-llmops-demo \
   --name llmops-api \
-  --image acrllmopsdemo2.azurecr.io/llmops-api:v4 \
+  --image acrllmopsdemo2.azurecr.io/llmops-api:v6 \
   --registry-login-server acrllmopsdemo2.azurecr.io \
   --registry-username acrllmopsdemo2 \
   --registry-password "${ACR_PASSWORD}" \

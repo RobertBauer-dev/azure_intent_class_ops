@@ -11,6 +11,7 @@ COPY app/ ./app/
 COPY model/ ./model/
 COPY data/ ./data/
 COPY config.py .
+COPY start.sh ./
 
 # Verify required files exist (critical for runtime)
 RUN test -f model/artifacts/model.pkl && \
@@ -21,4 +22,4 @@ RUN test -f model/artifacts/model.pkl && \
 
 EXPOSE 8001
 
-CMD ["python", "-m", "uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8001", "--log-level", "info"]
+CMD ["./start.sh"]

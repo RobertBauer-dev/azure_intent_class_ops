@@ -72,3 +72,54 @@ az monitor app-insights component create \
 # See metrics
 # portal -> Application Insights -> ins-llmops-demo
 # -> Investigate -> Transaction search
+
+
+
+```mermaid
+flowchart TD
+
+%% ===========================
+%% Sources & Ingestion
+%% ===========================
+A["Web Crawler<br/>Kafka Stream<br/>API Calls"] --> B["Text Ingestion Layer"]
+
+%% ===========================
+%% Embeddings + Index
+%% ===========================
+B --> C["Embeddings Service<br/>Azure OpenAI / LLM"]
+C --> D["FAISS Vector Store<br/>Semantic Index"]
+
+%% ===========================
+%% ML Model
+%% ===========================
+D --> E["ML Classifier<br/>Logistic Regression"]
+
+%% ===========================
+%% Decision Layer
+%% ===========================
+E -->|High Confidence| G["Final Intent"]
+E -->|Low Confidence| F["LLM Fallback<br/>GPT-4o-mini"]
+
+F --> G
+
+%% ===========================
+%% Serving Layer
+%% ===========================
+G --> H["FastAPI Inference Service<br/>Docker Container<br/>local / ACI / Cloud Run"]
+
+%% ===========================
+%% Monitoring
+%% ===========================
+H --> I["Monitoring & Logging<br/>Azure Application Insights"]
+
+%% ===========================
+%% CI/CD
+%% ===========================
+subgraph CI_CD["CI/CD Pipeline - GitHub Actions"]
+    J["Unit Tests<br/>Integration Tests"] --> K["Build Docker Image"]
+    K --> L["Push to Registry<br/>ACR / Artifact Registry"]
+    L --> M["Deploy Container<br/>Azure Container Instances"]
+end
+
+M --> H
+```
